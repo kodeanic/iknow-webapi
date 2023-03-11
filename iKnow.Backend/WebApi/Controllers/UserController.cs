@@ -1,41 +1,67 @@
 ﻿using Application.Requests.Users.Commands.CreateUser;
-using Application.Requests.Users.Commands.DeleteUser;
-using Application.Requests.Users.Commands.UpdateUser;
-using Application.Requests.Users.Queries.Dto;
-using Application.Requests.Users.Queries.GetAllUsers;
-using Application.Requests.Users.Queries.GetUser;
+using Application.Requests.Users.Queries.FindUser;
+using Common.Models.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace WebApi.Controllers;
 
 [ApiController]
 [Route("api/users")]
-public class UserController : Controller //ControllerBase
+public class UserController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IConfiguration _configuration;
 
-    public UserController(IMediator mediator) => _mediator = mediator;
+    public UserController(IMediator mediator, IConfiguration configuration) =>
+        (_mediator, _configuration) = (mediator, configuration);
 
-    [HttpGet]
-    public async Task<IEnumerable<UserDto>> GetAll() =>
-        await _mediator.Send(new GetAllUsersQuery());
-    
-    [HttpGet("{id}")]
-    public async Task<ActionResult<UserDto>> Get(int id) =>
-        await _mediator.Send(new GetUserQuery(id));
-
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateUserCommand command)
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] CreateUserCommand command)
     {
-        var userId = await _mediator.Send(command);
-        /*
-        var objectUrl = Url.Action(nameof(Get), new { id = userId });
-        return Created(objectUrl!, userId);
-        */
-        return Ok(userId);
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+
+        if (await _mediator.Send(new FindUserQuery(command.Email)))
+        {
+            return BadRequest();
+        }
+
+        var user = await _mediator.Send(command);
+        var token = GenerateJwtToken(command);
+
+        return Ok(new AuthenticationResult(token, user));
     }
 
+    private string GenerateJwtToken(CreateUserCommand command)
+    {
+        var jwtTokenHandler = new JwtSecurityTokenHandler();
+
+        var key = Encoding.UTF8.GetBytes(_configuration.GetSection("JwtSettings:SecretKey").Value);
+
+        var tokenDescriptor = new SecurityTokenDescriptor()
+        {
+            Subject = new ClaimsIdentity(new[]
+            {
+                new Claim("login", command.Login),
+                new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString())
+            }),
+
+            Expires = DateTime.Now.AddHours(1),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
+        };
+
+        var token = jwtTokenHandler.CreateToken(tokenDescriptor);
+        return jwtTokenHandler.WriteToken(token);
+    }
+
+    /*
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserCommand command)
     {
@@ -46,10 +72,12 @@ public class UserController : Controller //ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> Delete(int id)
     {
         await _mediator.Send(new DeleteUserCommand(id));
 
         return NoContent();
     }
+    */
 }
