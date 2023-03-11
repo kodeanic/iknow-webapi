@@ -10,13 +10,14 @@ public class CreateUserCommand : IRequest<User>
     public string Login { get; set; }
 
     [Required]
+    [EmailAddress]
     public string Email { get; set; }
 
     [Required]
     public string Password { get; set; }
 }
 
-public class CreateUserCommandHandler: IRequestHandler<CreateUserCommand, User>
+public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, User>
 {
     private readonly IApplicationDbContext _context;
 

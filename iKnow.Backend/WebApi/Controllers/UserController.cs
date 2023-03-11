@@ -1,12 +1,14 @@
 ﻿using Application.Requests.Users.Commands.CreateUser;
+using Application.Requests.Users.Commands.DeleteUser;
+using Application.Requests.Users.Commands.LoginUser;
 using Application.Requests.Users.Queries.FindUser;
 using Common.Models.Auth;
+using Common.Services;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
+using WebApi.Services.Auth;
 
 namespace WebApi.Controllers;
 
@@ -15,10 +17,10 @@ namespace WebApi.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IConfiguration _configuration;
+    private readonly IJwtTokenService _jwtTokenService;
 
-    public UserController(IMediator mediator, IConfiguration configuration) =>
-        (_mediator, _configuration) = (mediator, configuration);
+    public UserController(IMediator mediator, IJwtTokenService jwtTokenService) =>
+        (_mediator, _jwtTokenService) = (mediator, jwtTokenService);
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserCommand command)
@@ -28,56 +30,50 @@ public class UserController : ControllerBase
             return BadRequest();
         }
 
-        if (await _mediator.Send(new FindUserQuery(command.Email)))
+        if (await _mediator.Send(new FindUserQuery(command.Email)) != null)
         {
             return BadRequest();
         }
 
         var user = await _mediator.Send(command);
-        var token = GenerateJwtToken(command);
+        var token = _jwtTokenService.GenerateJwtToken(user);
 
-        return Ok(new AuthenticationResult(token, user));
+        return Ok(new AuthenticationResult(token, user.Id));
     }
 
-    private string GenerateJwtToken(CreateUserCommand command)
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginUserCommand command)
     {
-        var jwtTokenHandler = new JwtSecurityTokenHandler();
-
-        var key = Encoding.UTF8.GetBytes(_configuration.GetSection("JwtSettings:SecretKey").Value);
-
-        var tokenDescriptor = new SecurityTokenDescriptor()
+        if (!ModelState.IsValid)
         {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim("login", command.Login),
-                new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString())
-            }),
+            return BadRequest();
+        }
 
-            Expires = DateTime.Now.AddHours(1),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
-        };
+        if (await _mediator.Send(new FindUserQuery(command.Email)) == null)
+        {
+            return BadRequest();
+        }
 
-        var token = jwtTokenHandler.CreateToken(tokenDescriptor);
-        return jwtTokenHandler.WriteToken(token);
+        var user = await _mediator.Send(command);
+        var token = _jwtTokenService.GenerateJwtToken(user);
+
+        return Ok(new AuthenticationResult(token, user.Id));
     }
 
-    /*
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateUserCommand command)
-    {
-        command.Id = id;
-        await _mediator.Send(command);
-
-        return NoContent();
-    }
-
-    [HttpDelete("{id:int}")]
+    [HttpDelete("delete")]
     [Authorize]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete()
     {
-        await _mediator.Send(new DeleteUserCommand(id));
+        var userEmail = User?.FindFirstValue(ClaimTypes.Email);
 
-        return NoContent();
+        if (userEmail == null)
+        {
+            return BadRequest();
+        }
+
+        var user = await _mediator.Send(new FindUserQuery(userEmail));
+        await _mediator.Send(new DeleteUserCommand(user.Id));
+
+        return Ok();
     }
-    */
 }

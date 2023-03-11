@@ -9,11 +9,11 @@ public class AuthenticationResult
     public string AccessToken { get; set; }
 
     [Required]
-    public User User { get; set; }
+    public int UserId { get; set; }
 
-    public AuthenticationResult(string accessToken, User user)
+    public AuthenticationResult(string accessToken, int userId)
     {
         AccessToken = accessToken;
-        User = user;
+        UserId = userId;
     }
 }

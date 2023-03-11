@@ -1,9 +1,10 @@
-﻿using MediatR;
+﻿using Domain.Entities;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Requests.Users.Queries.FindUser;
 
-public class FindUserQuery : IRequest<bool>
+public class FindUserQuery : IRequest<User>
 {
     public string Email{ get; set; }
 
@@ -13,18 +14,18 @@ public class FindUserQuery : IRequest<bool>
     }
 }
 
-public class FindUserQueryHandler : IRequestHandler<FindUserQuery, bool>
+public class FindUserQueryHandler : IRequestHandler<FindUserQuery, User>
 {
     private readonly IApplicationDbContext _context;
 
     public FindUserQueryHandler(IApplicationDbContext context) => _context = context;
 
-    public async Task<bool> Handle(FindUserQuery request, CancellationToken cancellationToken)
+    public async Task<User> Handle(FindUserQuery request, CancellationToken cancellationToken)
     {
         var entity = await _context.Users
             .Where(x => x.Email == request.Email)
             .FirstOrDefaultAsync(cancellationToken);
 
-        return entity != null;
+        return entity;
     }
 }
