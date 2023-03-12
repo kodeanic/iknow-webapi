@@ -1,5 +1,4 @@
-﻿using Application.Requests.Users.Commands.CreateUser;
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Requests.Users.Commands.DeleteUser;

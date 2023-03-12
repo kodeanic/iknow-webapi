@@ -1,6 +1,8 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography;
+using System.Text;
 using SwaggerIgnore = System.Text.Json.Serialization.JsonIgnoreAttribute;
 
 namespace Application.Requests.Users.Commands.UpdateUser;
@@ -28,15 +30,24 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand>
         var entity = await _context.Users.Where(x => x.Id == request.Id).FirstOrDefaultAsync(cancellationToken);
         if (entity == null)
         {
-            return Unit.Value;
-            //throw new NotFoundException(nameof(BicycleBrand), request.Id.ToString());
+            throw new Exception();
         }
 
         entity.Login = request.Login;
-        entity.Password = request.Password;
+        entity.PasswordHash = HashPassword(request.Password);
 
         await _context.SaveChangesAsync(cancellationToken);
 
         return Unit.Value;
+    }
+
+    private string HashPassword(string password)
+    {
+        var sha = SHA256.Create();
+
+        var asByteArray = Encoding.UTF8.GetBytes(password);
+        var hashedPassword = sha.ComputeHash(asByteArray);
+
+        return Convert.ToBase64String(hashedPassword);
     }
 }

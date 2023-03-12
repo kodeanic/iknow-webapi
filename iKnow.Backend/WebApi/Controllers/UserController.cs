@@ -1,14 +1,13 @@
 ﻿using Application.Requests.Users.Commands.CreateUser;
 using Application.Requests.Users.Commands.DeleteUser;
 using Application.Requests.Users.Commands.LoginUser;
+using Application.Requests.Users.Commands.Refresh;
 using Application.Requests.Users.Queries.FindUser;
-using Common.Models.Auth;
-using Common.Services;
+using Application.Requests.Users.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using WebApi.Services.Auth;
 
 namespace WebApi.Controllers;
 
@@ -17,10 +16,13 @@ namespace WebApi.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IJwtTokenService _jwtTokenService;
+    private readonly ILoginService _loginService;
 
-    public UserController(IMediator mediator, IJwtTokenService jwtTokenService) =>
-        (_mediator, _jwtTokenService) = (mediator, jwtTokenService);
+    public UserController(IMediator mediator, ILoginService loginService)
+    {
+        _mediator = mediator;
+        _loginService = loginService;
+    }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserCommand command)
@@ -30,15 +32,10 @@ public class UserController : ControllerBase
             return BadRequest();
         }
 
-        if (await _mediator.Send(new FindUserQuery(command.Email)) != null)
-        {
-            return BadRequest();
-        }
-
         var user = await _mediator.Send(command);
-        var token = _jwtTokenService.GenerateJwtToken(user);
+        var result = await _loginService.Login(user);
 
-        return Ok(new AuthenticationResult(token, user.Id));
+        return Ok(result);
     }
 
     [HttpPost("login")]
@@ -49,18 +46,35 @@ public class UserController : ControllerBase
             return BadRequest();
         }
 
-        if (await _mediator.Send(new FindUserQuery(command.Email)) == null)
+        var user = await _mediator.Send(command);
+        var result = await _loginService.Login(user);
+
+        return Ok(result);
+    }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshCommand command)
+    {
+        var result = await _loginService.Refresh(command.RefreshToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> Get()
+    {
+        var userEmail = User?.FindFirstValue(ClaimTypes.Email);
+
+        if (userEmail == null)
         {
             return BadRequest();
         }
 
-        var user = await _mediator.Send(command);
-        var token = _jwtTokenService.GenerateJwtToken(user);
-
-        return Ok(new AuthenticationResult(token, user.Id));
+        return Ok(await _mediator.Send(new FindUserQuery(userEmail)));
     }
 
-    [HttpDelete("delete")]
+    [HttpDelete]
     [Authorize]
     public async Task<IActionResult> Delete()
     {

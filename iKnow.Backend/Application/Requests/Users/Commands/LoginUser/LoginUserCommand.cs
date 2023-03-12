@@ -1,8 +1,9 @@
-﻿using Application.Requests.Users.Commands.CreateUser;
-using Domain.Entities;
+﻿using Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Application.Requests.Users.Commands.LoginUser;
 
@@ -22,13 +23,26 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, User>
 
     public LoginUserCommandHandler(IApplicationDbContext context) => _context = context;
 
-    public async Task<User> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+    public async Task<User> Handle(LoginUserCommand request, CancellationToken _)
     {
         var entity = await _context.Users.Where(u => u.Email == request.Email).FirstOrDefaultAsync();
 
-        if (entity?.Password == request.Password)
+        if(entity == null)
+            throw new Exception(message: "Такого юзера не существует");
+
+        if (entity.PasswordHash == HashPassword(request.Password))
             return entity;
         else
-            return null;
+            throw new Exception(message: "Неверный пароль!!!");
+    }
+
+    private string HashPassword(string password)
+    {
+        var sha = SHA256.Create();
+
+        var asByteArray = Encoding.UTF8.GetBytes(password);
+        var hashedPassword = sha.ComputeHash(asByteArray);
+
+        return Convert.ToBase64String(hashedPassword);
     }
 }
