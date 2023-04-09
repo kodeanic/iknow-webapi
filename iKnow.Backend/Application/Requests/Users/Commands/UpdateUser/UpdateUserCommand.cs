@@ -13,7 +13,7 @@ public class UpdateUserCommand : IRequest
     public int Id { get; set; }
 
     [Required]
-    public string Login { get; set; }
+    public string LoginData { get; set; }
 
     [Required]
     public string Password { get; set; }
@@ -28,12 +28,13 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand>
     public async Task<Unit> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
         var entity = await _context.Users.Where(x => x.Id == request.Id).FirstOrDefaultAsync(cancellationToken);
+        
         if (entity == null)
         {
             throw new Exception();
         }
 
-        entity.Login = request.Login;
+        entity.LoginData = request.LoginData;
         entity.PasswordHash = HashPassword(request.Password);
 
         await _context.SaveChangesAsync(cancellationToken);

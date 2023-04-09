@@ -64,29 +64,23 @@ public class UserController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Get()
     {
-        var userEmail = User?.FindFirstValue(ClaimTypes.Email);
-
-        if (userEmail == null)
-        {
-            return BadRequest();
-        }
-
-        return Ok(await _mediator.Send(new FindUserQuery(userEmail)));
+        var userLoginData = User.FindFirstValue(ClaimTypes.Name);
+        
+        return Ok(await _mediator.Send(new FindUserQuery(userLoginData)));
     }
 
     [HttpDelete]
     [Authorize]
     public async Task<IActionResult> Delete()
     {
-        var userEmail = User?.FindFirstValue(ClaimTypes.Email);
+        var userLoginData = User.FindFirstValue(ClaimTypes.Name);
 
-        if (userEmail == null)
+        if (userLoginData == null)
         {
-            return BadRequest();
+            return Ok("ERROORR");
         }
-
-        var user = await _mediator.Send(new FindUserQuery(userEmail));
-        await _mediator.Send(new DeleteUserCommand(user.Id));
+        
+        await _mediator.Send(new DeleteUserCommand(userLoginData));
 
         return Ok();
     }

@@ -1,4 +1,5 @@
-﻿using Common.Models.Auth;
+﻿using Application.Common.Exceptions;
+using Common.Models.Auth;
 using Common.Services;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ public class LoginService : ILoginService
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IApplicationDbContext _dbContext;
     private readonly IConfiguration _configuration;
+    
     public LoginService(IJwtTokenService jwtTokenService, IApplicationDbContext dbContext, IConfiguration configuration)
     {
         _jwtTokenService = jwtTokenService;
@@ -36,13 +38,13 @@ public class LoginService : ILoginService
         var oldTokenEntity = await GetUserRefreshToken(oldToken);
         
         if(oldTokenEntity.ExpiredAt < DateTime.UtcNow)
-            throw new Exception(message: "Старый токен!");
+            throw new BadRequestException(message: "Старый токен!");
 
         var user = await _dbContext.Users.Where(u => u.Id == oldTokenEntity.UserId).FirstOrDefaultAsync();
 
         if (user == null)
         {
-            throw new Exception("Нет такого юзера");
+            throw new BadRequestException("Нет такого юзера");
         }
 
         return await CreateTokensPair(user);

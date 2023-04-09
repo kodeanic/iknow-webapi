@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
+using Application.Common.Exceptions;
 
 namespace Application.Requests.Users.Commands.LoginUser;
 
 public class LoginUserCommand : IRequest<User>
 {
     [Required]
-    [EmailAddress]
-    public string Email { get; set; }
+    public string LoginData { get; set; }
 
     [Required]
     public string Password { get; set; }
@@ -23,17 +23,14 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, User>
 
     public LoginUserCommandHandler(IApplicationDbContext context) => _context = context;
 
-    public async Task<User> Handle(LoginUserCommand request, CancellationToken _)
+    public async Task<User> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _context.Users.Where(u => u.Email == request.Email).FirstOrDefaultAsync();
+        var entity = await _context.Users.Where(u => u.LoginData == request.LoginData).FirstOrDefaultAsync(cancellationToken);
 
         if(entity == null)
-            throw new Exception(message: "Такого юзера не существует");
+            throw new BadRequestException(message: "Такого юзера не существует");
 
-        if (entity.PasswordHash == HashPassword(request.Password))
-            return entity;
-        else
-            throw new Exception(message: "Неверный пароль!!!");
+        return entity.PasswordHash == HashPassword(request.Password) ? entity : throw new BadRequestException(message: "Неверный пароль!!!");
     }
 
     private string HashPassword(string password)

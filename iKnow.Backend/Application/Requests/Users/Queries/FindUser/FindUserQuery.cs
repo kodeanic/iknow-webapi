@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Application.Common.Exceptions;
+using Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,11 +7,11 @@ namespace Application.Requests.Users.Queries.FindUser;
 
 public class FindUserQuery : IRequest<User>
 {
-    public string Email{ get; set; }
+    public string? LoginData { get; }
 
-    public FindUserQuery(string email)
+    public FindUserQuery(string loginData)
     {
-        Email = email;
+        LoginData = loginData;
     }
 }
 
@@ -22,10 +23,11 @@ public class FindUserQueryHandler : IRequestHandler<FindUserQuery, User>
 
     public async Task<User> Handle(FindUserQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _context.Users
-            .Where(x => x.Email == request.Email)
+        var entity = request.LoginData is null ? throw new BadRequestException() :
+            await _context.Users
+            .Where(x => x.LoginData == request.LoginData)
             .FirstOrDefaultAsync(cancellationToken);
 
-        return entity;
+        return entity ?? throw new NotFoundException("Такого пользователя не существует");
     }
 }

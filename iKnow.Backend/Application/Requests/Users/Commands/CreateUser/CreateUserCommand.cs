@@ -5,20 +5,19 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
+using Application.Common.Exceptions;
 
 namespace Application.Requests.Users.Commands.CreateUser;
 
 public class CreateUserCommand : IRequest<User>
 {
     [Required]
-    public string Login { get; set; }
-
-    [Required]
-    [EmailAddress]
-    public string Email { get; set; }
+    public string LoginData { get; set; }
 
     [Required]
     public string Password { get; set; }
+    
+    public string? Nickname { get; set; }
 }
 
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, User>
@@ -27,24 +26,21 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, User>
 
     public CreateUserCommandHandler(IApplicationDbContext context) => _context = context;
 
-    public async Task<User> Handle(CreateUserCommand request, CancellationToken _)
+    public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _context.Users.Where(u => u.Email == request.Email).FirstOrDefaultAsync();
+        var entity = await _context.Users.FirstOrDefaultAsync(u => u.LoginData == request.LoginData, cancellationToken);
 
-        if (entity != null)
-            throw new Exception(message: "Такой юзер уже есть");
-
-        entity = new User()
+        var user = entity is not null ? throw new BadRequestException("Пользователь уже существует") : new User()
         {
-            Login = request.Login,
-            Email = request.Email,
-            PasswordHash = HashPassword(request.Password)
+            LoginData = request.LoginData,
+            PasswordHash = HashPassword(request.Password),
+            Nickname = request.Nickname
         };
 
-        await _context.Users.AddAsync(entity);
-        await _context.SaveChangesAsync();
+        await _context.Users.AddAsync(user, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
 
-        return entity;
+        return user;
     }
 
     private string HashPassword(string password)
