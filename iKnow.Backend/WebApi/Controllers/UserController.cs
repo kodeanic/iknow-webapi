@@ -1,13 +1,11 @@
-﻿using Application.Requests.Users.Commands.CreateUser;
-using Application.Requests.Users.Commands.DeleteUser;
-using Application.Requests.Users.Commands.LoginUser;
-using Application.Requests.Users.Commands.Refresh;
-using Application.Requests.Users.Queries.FindUser;
+﻿using Application.Requests.Users.Commands;
+using Application.Requests.Users.Queries;
 using Application.Requests.Users.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Application.Common.Exceptions;
 
 namespace WebApi.Controllers;
 
@@ -27,61 +25,40 @@ public class UserController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserCommand command)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest();
-        }
-
         var user = await _mediator.Send(command);
-        var result = await _loginService.Login(user);
-
-        return Ok(result);
+        return Ok(await _loginService.Login(user));
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginUserCommand command)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest();
-        }
-
         var user = await _mediator.Send(command);
-        var result = await _loginService.Login(user);
-
-        return Ok(result);
+        return Ok(await _loginService.Login(user));
     }
 
     [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh([FromBody] RefreshCommand command)
-    {
-        var result = await _loginService.Refresh(command.RefreshToken);
-
-        return Ok(result);
-    }
+    public async Task<IActionResult> Refresh([FromBody] RefreshCommand command) =>
+        Ok(await _loginService.Refresh(command.RefreshToken));
 
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> Get()
     {
-        var userLoginData = User.FindFirstValue(ClaimTypes.Name);
+        var userPhone = User.FindFirstValue(ClaimTypes.MobilePhone);
         
-        return Ok(await _mediator.Send(new FindUserQuery(userLoginData)));
+        return userPhone is null ?
+            throw new BadRequestException("Ошибка валидации токена") :
+            Ok(await _mediator.Send(new FindUserQuery(userPhone)));
     }
 
     [HttpDelete]
     [Authorize]
     public async Task<IActionResult> Delete()
     {
-        var userLoginData = User.FindFirstValue(ClaimTypes.Name);
-
-        if (userLoginData == null)
-        {
-            return Ok("ERROORR");
-        }
+        var userPhone = User.FindFirstValue(ClaimTypes.MobilePhone);
         
-        await _mediator.Send(new DeleteUserCommand(userLoginData));
-
-        return Ok();
+        return userPhone is null ?
+            throw new BadRequestException("Ошибка валидации токена") :
+            Ok(await _mediator.Send(new DeleteUserCommand(userPhone)));
     }
 }

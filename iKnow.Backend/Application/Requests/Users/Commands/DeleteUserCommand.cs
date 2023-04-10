@@ -1,16 +1,19 @@
-﻿using Application.Common.Exceptions;
+﻿using System.ComponentModel.DataAnnotations;
+using Application.Common.Exceptions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Application.Requests.Users.Commands.DeleteUser;
+namespace Application.Requests.Users.Commands;
 
 public class DeleteUserCommand : IRequest
 {
-    public string LoginData { get; }
+    [Required]
+    [Phone]
+    public string Phone { get; }
 
-    public DeleteUserCommand(string loginData)
+    public DeleteUserCommand(string phone)
     {
-        LoginData = loginData;
+        Phone = phone;
     }
 }
 
@@ -25,15 +28,16 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand>
 
     public async Task<Unit> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _context.Users
-            .Where(x => x.LoginData == request.LoginData)
+        var user = await _context.Users
+            .Where(u => u.Phone == request.Phone)
             .FirstOrDefaultAsync(cancellationToken);
         
-        if (entity == null)
+        if (user == null)
         {
-            throw new NotFoundException("Такого пользователя не существует");
+            throw new NotFoundException("Пользователя не существует");
         }
-        _context.Users.Remove(entity);
+        
+        _context.Users.Remove(user);
         await _context.SaveChangesAsync(cancellationToken);
 
         return Unit.Value;

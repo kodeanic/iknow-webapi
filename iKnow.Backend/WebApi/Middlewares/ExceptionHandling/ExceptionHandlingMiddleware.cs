@@ -24,10 +24,8 @@ public class ExceptionHandlingMiddleware
             context.Response.ContentType = "application/json";
             
             await context.Response.WriteAsync(JsonConvert.SerializeObject(
-                new 
-                { 
-                    Message = ex.Message
-                }));
+                new { Message = ex.Message }
+                ));
         }
     }
 }

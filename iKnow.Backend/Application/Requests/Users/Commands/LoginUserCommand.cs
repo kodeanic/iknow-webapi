@@ -6,12 +6,13 @@ using System.Security.Cryptography;
 using System.Text;
 using Application.Common.Exceptions;
 
-namespace Application.Requests.Users.Commands.LoginUser;
+namespace Application.Requests.Users.Commands;
 
 public class LoginUserCommand : IRequest<User>
 {
     [Required]
-    public string LoginData { get; set; }
+    [Phone]
+    public string Phone { get; set; }
 
     [Required]
     public string Password { get; set; }
@@ -25,12 +26,15 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, User>
 
     public async Task<User> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _context.Users.Where(u => u.LoginData == request.LoginData).FirstOrDefaultAsync(cancellationToken);
+        var user = await _context.Users
+            .Where(u => u.Phone == request.Phone).FirstOrDefaultAsync(cancellationToken);
 
-        if(entity == null)
-            throw new BadRequestException(message: "Такого юзера не существует");
+        if(user == null)
+            throw new NotFoundException("Неверный номер телефона");
 
-        return entity.PasswordHash == HashPassword(request.Password) ? entity : throw new BadRequestException(message: "Неверный пароль!!!");
+        return user.PasswordHash != HashPassword(request.Password) ?
+            throw new BadRequestException("Неверный пароль") :
+            user;
     }
 
     private string HashPassword(string password)

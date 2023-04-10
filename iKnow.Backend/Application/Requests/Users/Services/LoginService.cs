@@ -23,13 +23,14 @@ public class LoginService : ILoginService
     public async Task<AuthenticationResult> Login(User user)
     {
         await DeleteExtraTokens(user.Id);
-
         return await CreateTokensPair(user);
     }
 
     private async Task DeleteExtraTokens(int userId)
     {
-        var userTokens = await _dbContext.UserRefreshTokens.Where(t => t.UserId == userId).ToListAsync();
+        var userTokens = await _dbContext.UserRefreshTokens
+            .Where(t => t.UserId == userId).ToListAsync();
+        
         _dbContext.UserRefreshTokens.RemoveRange(userTokens);
     }
 
@@ -38,13 +39,13 @@ public class LoginService : ILoginService
         var oldTokenEntity = await GetUserRefreshToken(oldToken);
         
         if(oldTokenEntity.ExpiredAt < DateTime.UtcNow)
-            throw new BadRequestException(message: "Старый токен!");
+            throw new BadRequestException("Токен больше не валиден");
 
         var user = await _dbContext.Users.Where(u => u.Id == oldTokenEntity.UserId).FirstOrDefaultAsync();
 
         if (user == null)
         {
-            throw new BadRequestException("Нет такого юзера");
+            throw new BadRequestException("Пользователя не существует");
         }
 
         return await CreateTokensPair(user);
@@ -78,12 +79,12 @@ public class LoginService : ILoginService
     private async Task<UserRefreshToken> GetUserRefreshToken(string oldRefreshToken)
     {
         var oldTokenEntity = await _dbContext.UserRefreshTokens
-            .Where(x => x.RefreshToken == oldRefreshToken)
+            .Where(t => t.RefreshToken == oldRefreshToken)
             .FirstOrDefaultAsync();
 
         if (oldTokenEntity == null)
         {
-            throw new Exception(message: "Нет такого токена!");
+            throw new BadRequestException("Токен больше не валиден");
         }
 
         _dbContext.UserRefreshTokens.Remove(oldTokenEntity);

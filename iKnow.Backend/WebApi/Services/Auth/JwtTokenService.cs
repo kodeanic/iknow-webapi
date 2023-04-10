@@ -24,7 +24,7 @@ public class JwtTokenService : IJwtTokenService
         {
             Subject = new ClaimsIdentity(new[]
             {
-                new Claim(ClaimTypes.Name, user.LoginData)
+                new Claim(ClaimTypes.MobilePhone, user.Phone)
             }),
 
             Expires = DateTime.UtcNow.

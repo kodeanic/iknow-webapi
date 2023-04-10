@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Application.Requests.Users.Commands.Refresh;
+namespace Application.Requests.Users.Commands;
 
 public class RefreshCommand
 {
