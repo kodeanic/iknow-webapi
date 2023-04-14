@@ -10,11 +10,9 @@ namespace Application.Requests.Users.Commands;
 
 public class LoginUserCommand : IRequest<User>
 {
-    [Required]
-    [Phone]
+    [RegularExpression(@"^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$", ErrorMessage = "Invalid phone number")]
     public string Phone { get; set; }
-
-    [Required]
+    
     public string Password { get; set; }
 }
 
@@ -26,8 +24,10 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, User>
 
     public async Task<User> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
+        var phone = string.Join("", request.Phone.Where(char.IsDigit));
+        
         var user = await _context.Users
-            .Where(u => u.Phone == request.Phone).FirstOrDefaultAsync(cancellationToken);
+            .Where(u => u.Phone == phone).FirstOrDefaultAsync(cancellationToken);
 
         if(user == null)
             throw new NotFoundException("Неверный номер телефона");

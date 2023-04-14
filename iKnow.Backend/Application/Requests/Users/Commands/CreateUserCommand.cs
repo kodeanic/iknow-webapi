@@ -10,11 +10,9 @@ namespace Application.Requests.Users.Commands;
 
 public class CreateUserCommand : IRequest<User>
 {
-    [Required]
-    [Phone]
+    [RegularExpression(@"^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$", ErrorMessage = "Invalid phone number")]
     public string Phone { get; set; }
-
-    [Required]
+    
     public string Password { get; set; }
     
     public string? Nickname { get; set; }
@@ -28,14 +26,16 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, User>
 
     public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
+        var phone = string.Join("", request.Phone.Where(char.IsDigit));
+        
         var entity = await _context.Users.
-            Where(e => e.Phone == request.Phone).FirstOrDefaultAsync(cancellationToken);
+            Where(e => e.Phone == phone).FirstOrDefaultAsync(cancellationToken);
 
         var user = entity is not null ?
             throw new BadRequestException("Пользователь с таким номером телефона уже существует") :
             new User
             { 
-                Phone = request.Phone, 
+                Phone = phone, 
                 PasswordHash = HashPassword(request.Password), 
                 Nickname = request.Nickname 
             };

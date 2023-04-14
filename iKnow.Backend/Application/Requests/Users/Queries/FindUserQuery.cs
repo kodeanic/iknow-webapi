@@ -6,10 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Requests.Users.Queries;
 
-public class FindUserQuery : IRequest<User>
+public class FindUserQuery : IRequest<object>
 {
-    [Required]
-    [Phone]
+    [RegularExpression(@"^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$", ErrorMessage = "Invalid phone number")]
     public string Phone { get; }
 
     public FindUserQuery(string phone)
@@ -18,16 +17,18 @@ public class FindUserQuery : IRequest<User>
     }
 }
 
-public class FindUserQueryHandler : IRequestHandler<FindUserQuery, User>
+public class FindUserQueryHandler : IRequestHandler<FindUserQuery, object>
 {
     private readonly IApplicationDbContext _context;
 
     public FindUserQueryHandler(IApplicationDbContext context) => _context = context;
 
-    public async Task<User> Handle(FindUserQuery request, CancellationToken cancellationToken)
+    public async Task<object> Handle(FindUserQuery request, CancellationToken cancellationToken)
     {
+        var phone = string.Join("", request.Phone.Where(char.IsDigit));
+
         var user = await _context.Users
-            .Where(u => u.Phone == request.Phone)
+            .Where(u => u.Phone == phone)
             .FirstOrDefaultAsync(cancellationToken);
 
         return user ?? throw new NotFoundException("Пользователя не существует");
