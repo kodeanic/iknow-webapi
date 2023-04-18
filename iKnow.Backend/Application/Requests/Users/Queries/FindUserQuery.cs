@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Requests.Users.Queries;
 
-public class FindUserQuery : IRequest<object>
+public class FindUserQuery : IRequest<User>
 {
     [RegularExpression(@"^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$", ErrorMessage = "Invalid phone number")]
     public string Phone { get; }
@@ -17,13 +17,13 @@ public class FindUserQuery : IRequest<object>
     }
 }
 
-public class FindUserQueryHandler : IRequestHandler<FindUserQuery, object>
+public class FindUserQueryHandler : IRequestHandler<FindUserQuery, User>
 {
     private readonly IApplicationDbContext _context;
 
     public FindUserQueryHandler(IApplicationDbContext context) => _context = context;
 
-    public async Task<object> Handle(FindUserQuery request, CancellationToken cancellationToken)
+    public async Task<User> Handle(FindUserQuery request, CancellationToken cancellationToken)
     {
         var phone = string.Join("", request.Phone.Where(char.IsDigit));
 

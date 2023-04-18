@@ -1,10 +1,10 @@
 ﻿namespace Domain.Entities;
 
-public class Subtopic
+public class Topic
 {
     public int Id { get; set; }
     
     public string Title { get; set; }
     
-    public int Tasks { get; set; }
+    public List<Subtopic> Subtopics { get; set; }
 }

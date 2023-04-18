@@ -1,12 +1,16 @@
-﻿namespace Domain.Entities;
+﻿using Domain.Enums;
+
+namespace Domain.Entities;
 
 public class Progress
 {
-    public int ThemeId { get; set; }
+    public int Id { get; set; }
     
-    public int ExerciseId { get; set; }
+    public User User { get; set; }
+    
+    public Subtopic Topic { get; set; }
     
     public int Number { get; set; }
-    
-    public string Description { get; set; }
+
+    public TopicState State { get; set; } = TopicState.IsLocked;
 }

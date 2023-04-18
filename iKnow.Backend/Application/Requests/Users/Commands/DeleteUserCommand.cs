@@ -42,6 +42,12 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand>
             .Where(t => t.User.Id == user.Id)
             .ToListAsync(cancellationToken);
         
+        var progress = await _context.Progresses
+            .Include(p => p.User)
+            .Where(p => p.User.Id == user.Id)
+            .ToListAsync(cancellationToken);
+        
+        _context.Progresses.RemoveRange(progress);
         _context.UserRefreshTokens.RemoveRange(tokens);
         _context.Users.Remove(user);
         await _context.SaveChangesAsync(cancellationToken);
