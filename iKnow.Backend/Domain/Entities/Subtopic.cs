@@ -6,5 +6,5 @@ public class Subtopic
     
     public string Title { get; set; }
     
-    public int Tasks { get; set; }
+    public List<Exercise> Exercises { get; set; }
 }

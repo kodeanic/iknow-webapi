@@ -14,6 +14,8 @@ public interface IApplicationDbContext : IDisposable
     
     public DbSet<Progress> Progresses { get; set; }
     
+    public DbSet<Exercise> Exercises { get; set; }
+    
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
     int SaveChanges();

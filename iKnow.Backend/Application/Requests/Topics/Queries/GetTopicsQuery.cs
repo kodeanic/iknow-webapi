@@ -54,7 +54,7 @@ public class GetTopicsQueryHandler : IRequestHandler<GetTopicsQuery, List<TopicD
 
         foreach (var topic in subject.Topics)
         {
-            var topicTasksCount = topic.Subtopics.Sum(subtopic => subtopic.Tasks);
+            var topicTasksCount = topic.Subtopics.Sum(subtopic => subtopic.Exercises.Count);
             var doneTopicTasksCount = 0;
             var subtopicsDto = new List<SubtopicDto>();
             
@@ -67,7 +67,7 @@ public class GetTopicsQueryHandler : IRequestHandler<GetTopicsQuery, List<TopicD
                 {
                     Id = subtopic.Id,
                     Title = subtopic.Title,
-                    Progress = subtopicProgress.CompletedExercises * 100 / subtopic.Tasks,
+                    Progress = subtopicProgress.CompletedExercises * 100 / subtopic.Exercises.Count,
                     State = subtopicProgress.IsOpen ? "IsOpen" : "IsLocked"
                 });
             }
