@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
 using Application.Common.Exceptions;
-using Domain.Enums;
 
 namespace Application.Requests.Users.Commands;
 
@@ -41,8 +40,6 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, User>
                 Nickname = request.Nickname 
             };
 
-        await _context.Users.AddAsync(user, cancellationToken);
-
         var topics = await _context.Topics
             .Include(t => t.Subtopics)
             .ToListAsync(cancellationToken);
@@ -57,14 +54,14 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, User>
                 progress.Add(new Progress
                 {
                     User = user,
-                    Topic = subtopic,
-                    State = subtopics.First() == subtopic ? TopicState.IsOpen : TopicState.IsLocked
+                    Subtopic = subtopic,
+                    IsOpen = subtopics.First() == subtopic
                 });
             }
         }
-
+        
+        await _context.Users.AddAsync(user, cancellationToken);
         await _context.Progresses.AddRangeAsync(progress, cancellationToken);
-
         await _context.SaveChangesAsync(cancellationToken);
 
         return user;

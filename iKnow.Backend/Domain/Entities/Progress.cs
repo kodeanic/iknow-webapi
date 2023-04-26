@@ -1,6 +1,4 @@
-﻿using Domain.Enums;
-
-namespace Domain.Entities;
+﻿namespace Domain.Entities;
 
 public class Progress
 {
@@ -8,9 +6,9 @@ public class Progress
     
     public User User { get; set; }
     
-    public Subtopic Topic { get; set; }
+    public Subtopic Subtopic { get; set; }
     
-    public int Number { get; set; }
+    public int CompletedExercises { get; set; }
 
-    public TopicState State { get; set; } = TopicState.IsLocked;
+    public bool IsOpen { get; set; } = false;
 }

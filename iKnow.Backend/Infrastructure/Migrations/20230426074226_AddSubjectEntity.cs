@@ -4,7 +4,7 @@
 
 namespace Infrastructure.Migrations
 {
-    public partial class AddSubjects : Migration
+    public partial class AddSubjectEntity : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -14,8 +14,7 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SubjectType = table.Column<int>(type: "int", nullable: false)
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -68,16 +67,16 @@ namespace Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    TopicId = table.Column<int>(type: "int", nullable: false),
-                    Number = table.Column<int>(type: "int", nullable: false),
-                    State = table.Column<int>(type: "int", nullable: false)
+                    SubtopicId = table.Column<int>(type: "int", nullable: false),
+                    CompletedExercises = table.Column<int>(type: "int", nullable: false),
+                    IsOpen = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Progresses", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Progresses_Subtopics_TopicId",
-                        column: x => x.TopicId,
+                        name: "FK_Progresses_Subtopics_SubtopicId",
+                        column: x => x.SubtopicId,
                         principalTable: "Subtopics",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -90,9 +89,9 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Progresses_TopicId",
+                name: "IX_Progresses_SubtopicId",
                 table: "Progresses",
-                column: "TopicId");
+                column: "SubtopicId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Progresses_UserId",

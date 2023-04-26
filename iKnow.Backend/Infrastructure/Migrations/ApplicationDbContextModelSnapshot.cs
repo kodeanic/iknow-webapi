@@ -30,13 +30,13 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("Number")
+                    b.Property<int>("CompletedExercises")
                         .HasColumnType("int");
 
-                    b.Property<int>("State")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsOpen")
+                        .HasColumnType("bit");
 
-                    b.Property<int>("TopicId")
+                    b.Property<int>("SubtopicId")
                         .HasColumnType("int");
 
                     b.Property<int>("UserId")
@@ -44,7 +44,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TopicId");
+                    b.HasIndex("SubtopicId");
 
                     b.HasIndex("UserId");
 
@@ -58,9 +58,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int>("SubjectType")
-                        .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -169,9 +166,9 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Progress", b =>
                 {
-                    b.HasOne("Domain.Entities.Subtopic", "Topic")
+                    b.HasOne("Domain.Entities.Subtopic", "Subtopic")
                         .WithMany()
-                        .HasForeignKey("TopicId")
+                        .HasForeignKey("SubtopicId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -181,7 +178,7 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Topic");
+                    b.Navigation("Subtopic");
 
                     b.Navigation("User");
                 });
