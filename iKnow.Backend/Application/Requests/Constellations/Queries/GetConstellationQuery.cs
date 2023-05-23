@@ -1,11 +1,12 @@
-﻿using Application.Common.Exceptions;
+﻿using Application.Common.Dto;
+using Application.Common.Exceptions;
 using Domain.Entities.Constellations;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Requests.Constellations.Queries;
 
-public class GetConstellationQuery : IRequest<Constellation>
+public class GetConstellationQuery : IRequest<ConstellationDto>
 {
     public int Id { get; set; }
 
@@ -15,13 +16,13 @@ public class GetConstellationQuery : IRequest<Constellation>
     }
 }
 
-public class GetConstellationQueryHandler : IRequestHandler<GetConstellationQuery, Constellation>
+public class GetConstellationQueryHandler : IRequestHandler<GetConstellationQuery, ConstellationDto>
 {
     private readonly IApplicationDbContext _context;
 
     public GetConstellationQueryHandler(IApplicationDbContext context) => _context = context;
 
-    public async Task<Constellation> Handle(GetConstellationQuery request, CancellationToken cancellationToken)
+    public async Task<ConstellationDto> Handle(GetConstellationQuery request, CancellationToken cancellationToken)
     {
         var constellation = await _context.Constellations
             .Include(c => c.Lines)
@@ -31,7 +32,36 @@ public class GetConstellationQueryHandler : IRequestHandler<GetConstellationQuer
 
         if (constellation is null)
             throw new NotFoundException("Такого созвездия не существует");
+
+        var response = new ConstellationDto
+        {
+            Id = constellation.Id,
+            Name = constellation.Name,
+            Stars = new List<StarDto>(),
+            Lines = new List<LineDto>()
+        };
+
+        foreach (var star in constellation.Stars)
+        {
+            response.Stars.Add(new StarDto
+            {
+                Number = star.Number,
+                X = star.X,
+                Y = star.Y,
+                IsClicked = star.IsClicked
+            });
+        }
+
+        foreach (var line in constellation.Lines)
+        {
+            response.Lines.Add(new LineDto
+            {
+                Number = line.Number,
+                StarLeftNumber = line.StarLeftNumber,
+                StarRightNumber = line.StarRightNumber
+            });
+        }
         
-        return constellation;
+        return response;
     }
 }

@@ -1,5 +1,5 @@
-﻿using Application.Requests.Constellations.Queries;
-using Domain.Entities.Constellations;
+﻿using Application.Common.Dto;
+using Application.Requests.Constellations.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +19,7 @@ public class ConstellationsController : ControllerBase
     
     [HttpGet("{id:int}")]
     [Authorize]
-    public async Task<Constellation> Get(int id)
+    public async Task<ConstellationDto> Get(int id)
     {
         return await _mediator.Send(new GetConstellationQuery(id));
     }

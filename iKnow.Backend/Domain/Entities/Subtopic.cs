@@ -7,4 +7,6 @@ public class Subtopic
     public string Title { get; set; }
     
     public List<Exercise> Exercises { get; set; }
+    
+    public string? Theory { get; set; }
 }

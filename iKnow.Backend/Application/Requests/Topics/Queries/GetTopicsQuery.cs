@@ -67,12 +67,14 @@ public class GetTopicsQueryHandler : IRequestHandler<GetTopicsQuery, List<TopicD
             {
                 var subtopicProgress = progress.Single(p => p.Subtopic == subtopic);
                 doneTopicTasksCount += subtopicProgress.CompletedExercises;
-                
+
                 subtopicsDto.Add(new SubtopicDto
                 {
                     Id = subtopic.Id,
                     Title = subtopic.Title,
-                    Progress = subtopicProgress.CompletedExercises * 100 / subtopic.Exercises.Count,
+                    Progress = subtopic.Exercises.Count != 0 ?
+                        subtopicProgress.CompletedExercises * 100 / subtopic.Exercises.Count :
+                        0,
                     State = subtopicProgress.IsOpen ? "IsOpen" : "IsLocked"
                 });
             }
