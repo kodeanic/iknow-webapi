@@ -3,6 +3,8 @@
 public class User
 {
     public int Id { get; set; }
+
+    public int PictureId { get; set; }
     
     public string Phone { get; set; }
     

@@ -38,6 +38,7 @@ public class GetTopicsQueryHandler : IRequestHandler<GetTopicsQuery, List<TopicD
         var subject = await _context.Subjects
             .Include(s => s.Topics)
             .ThenInclude(t => t.Subtopics)
+            .ThenInclude(s => s.Exercises)
             .Where(s => s.Id == request.SubjectId)
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -55,6 +56,10 @@ public class GetTopicsQueryHandler : IRequestHandler<GetTopicsQuery, List<TopicD
         foreach (var topic in subject.Topics)
         {
             var topicTasksCount = topic.Subtopics.Sum(subtopic => subtopic.Exercises.Count);
+            
+            if (topicTasksCount == 0)
+                topicTasksCount = 1;
+            
             var doneTopicTasksCount = 0;
             var subtopicsDto = new List<SubtopicDto>();
             

@@ -34,7 +34,8 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, User>
         var user = entity is not null ?
             throw new BadRequestException("Пользователь с таким номером телефона уже существует") :
             new User
-            { 
+            {
+                PictureId = 0,
                 Phone = phone, 
                 PasswordHash = HashPassword(request.Password), 
                 Nickname = request.Nickname 

@@ -4,6 +4,7 @@ using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230517144405_UpdateUserEntity")]
+    partial class UpdateUserEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,80 +23,6 @@ namespace Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
-
-            modelBuilder.Entity("Domain.Entities.Constellations.Constellation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Constellations");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Constellations.Line", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int?>("ConstellationId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Number")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StarLeftId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StarRightId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConstellationId");
-
-                    b.ToTable("Lines");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Constellations.Star", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int?>("ConstellationId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsClicked")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Number")
-                        .HasColumnType("int");
-
-                    b.Property<int>("X")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Y")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConstellationId");
-
-                    b.ToTable("Stars");
-                });
 
             modelBuilder.Entity("Domain.Entities.Exercise", b =>
                 {
@@ -267,20 +195,6 @@ namespace Infrastructure.Migrations
                     b.ToTable("UserRefreshTokens");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Constellations.Line", b =>
-                {
-                    b.HasOne("Domain.Entities.Constellations.Constellation", null)
-                        .WithMany("Lines")
-                        .HasForeignKey("ConstellationId");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Constellations.Star", b =>
-                {
-                    b.HasOne("Domain.Entities.Constellations.Constellation", null)
-                        .WithMany("Stars")
-                        .HasForeignKey("ConstellationId");
-                });
-
             modelBuilder.Entity("Domain.Entities.Exercise", b =>
                 {
                     b.HasOne("Domain.Entities.Subtopic", null)
@@ -330,13 +244,6 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Constellations.Constellation", b =>
-                {
-                    b.Navigation("Lines");
-
-                    b.Navigation("Stars");
                 });
 
             modelBuilder.Entity("Domain.Entities.Subject", b =>
