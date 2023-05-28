@@ -31,7 +31,7 @@ public static class AppAuthenticationExtensions
                 ValidateIssuer = false, // !
                 ValidateAudience = false, // !
                 RequireExpirationTime = false, // !
-                ValidateLifetime = true,
+                ValidateLifetime = false,
 
                 ClockSkew = TimeSpan.Zero
             };

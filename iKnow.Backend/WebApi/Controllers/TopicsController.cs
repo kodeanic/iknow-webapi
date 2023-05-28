@@ -18,11 +18,18 @@ public class TopicsController : ControllerBase
         _mediator = mediator;
     }
     
-    [HttpGet("{subjectId:int}")]
+    [HttpGet("get-topics/{subjectId:int}")]
     [Authorize]
     public async Task<List<TopicDto>> GetTopics(int subjectId)
     {
         var userPhone = User.FindFirstValue(ClaimTypes.MobilePhone)!;
         return await _mediator.Send(new GetTopicsQuery(subjectId, userPhone));
+    }
+    
+    [HttpGet("get-theory/{subtopicId:int}")]
+    [Authorize]
+    public async Task<TheoryDto> GetSubtopicTheory(int subtopicId)
+    {
+        return await _mediator.Send(new GetSubtopicTheoryQuery { SubtopicId = subtopicId });
     }
 }
