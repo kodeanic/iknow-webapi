@@ -9,6 +9,4 @@ public class Exercise
     public string? Options { get; set; }
     
     public string Answer { get; set; }
-    
-    public string? Explanation { get; set; }
 }

@@ -21,7 +21,7 @@ public class ExercisesController : ControllerBase
     
     [HttpGet("get-exercise/{subtopicId:int}")]
     [Authorize]
-    public async Task<ExerciseDto> GetExercise(int subtopicId)
+    public async Task<TaskDto> GetExercise(int subtopicId)
     {
         var userPhone = User.FindFirstValue(ClaimTypes.MobilePhone)!;
         return await _mediator.Send(new GetExerciseQuery(subtopicId, userPhone));
@@ -32,13 +32,6 @@ public class ExercisesController : ControllerBase
     public async Task<bool> CheckAnswer(int exerciseId, [FromBody] GetAnswerDto answer)
     {
         var userPhone = User.FindFirstValue(ClaimTypes.MobilePhone)!;
-        return await _mediator.Send(new CheckAnswerCommand(exerciseId, userPhone, answer.Answer));
-    }
-
-    [HttpGet("get-explanation/{exerciseId:int}")]
-    [Authorize]
-    public async Task<ExplanationDto> GetExerciseExplanation(int exerciseId)
-    {
-        return await _mediator.Send(new GetExerciseExplanationQuery { ExerciseId = exerciseId });
+        return await _mediator.Send(new CheckAnswerCommand(exerciseId, userPhone, answer.Answer, answer.Type));
     }
 }

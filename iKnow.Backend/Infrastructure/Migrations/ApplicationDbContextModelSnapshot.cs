@@ -34,7 +34,12 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("SubtopicId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("SubtopicId");
 
                     b.ToTable("Constellations");
                 });
@@ -106,9 +111,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Answer")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Explanation")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Options")
@@ -192,6 +194,9 @@ namespace Infrastructure.Migrations
                     b.Property<int?>("TopicId")
                         .HasColumnType("int");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TopicId");
@@ -273,6 +278,13 @@ namespace Infrastructure.Migrations
                     b.ToTable("UserRefreshTokens");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Constellations.Constellation", b =>
+                {
+                    b.HasOne("Domain.Entities.Subtopic", null)
+                        .WithMany("Constellations")
+                        .HasForeignKey("SubtopicId");
+                });
+
             modelBuilder.Entity("Domain.Entities.Constellations.Line", b =>
                 {
                     b.HasOne("Domain.Entities.Constellations.Constellation", null)
@@ -352,6 +364,8 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Subtopic", b =>
                 {
+                    b.Navigation("Constellations");
+
                     b.Navigation("Exercises");
                 });
 

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230518085417_AddConstellationEntity")]
-    partial class AddConstellationEntity
+    [Migration("20230529122509_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -36,7 +36,12 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("SubtopicId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("SubtopicId");
 
                     b.ToTable("Constellations");
                 });
@@ -55,10 +60,10 @@ namespace Infrastructure.Migrations
                     b.Property<int>("Number")
                         .HasColumnType("int");
 
-                    b.Property<int>("StarLeftId")
+                    b.Property<int>("StarLeftNumber")
                         .HasColumnType("int");
 
-                    b.Property<int>("StarRightId")
+                    b.Property<int>("StarRightNumber")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -181,11 +186,17 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<string>("Theory")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("TopicId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -269,6 +280,13 @@ namespace Infrastructure.Migrations
                     b.ToTable("UserRefreshTokens");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Constellations.Constellation", b =>
+                {
+                    b.HasOne("Domain.Entities.Subtopic", null)
+                        .WithMany("Constellations")
+                        .HasForeignKey("SubtopicId");
+                });
+
             modelBuilder.Entity("Domain.Entities.Constellations.Line", b =>
                 {
                     b.HasOne("Domain.Entities.Constellations.Constellation", null)
@@ -348,6 +366,8 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Subtopic", b =>
                 {
+                    b.Navigation("Constellations");
+
                     b.Navigation("Exercises");
                 });
 

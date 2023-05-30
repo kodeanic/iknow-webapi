@@ -1,4 +1,7 @@
-﻿namespace Domain.Entities;
+﻿using Domain.Entities.Constellations;
+using Domain.Enums;
+
+namespace Domain.Entities;
 
 public class Subtopic
 {
@@ -6,7 +9,11 @@ public class Subtopic
     
     public string Title { get; set; }
     
-    public List<Exercise> Exercises { get; set; }
+    public TaskType Type { get; set; }
+    
+    public List<Exercise>? Exercises { get; set; }
+    
+    public List<Constellation>? Constellations { get; set; }
     
     public string? Theory { get; set; }
 }
