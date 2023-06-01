@@ -37,8 +37,6 @@ public class GetTopicsQueryHandler : IRequestHandler<GetTopicsQuery, List<TopicD
 
         var subject = await _context.Subjects
             .Include(s => s.Topics)
-            .ThenInclude(t => t.Subtopics)
-            .ThenInclude(s => s.Exercises)
             .Where(s => s.Id == request.SubjectId)
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -55,21 +53,27 @@ public class GetTopicsQueryHandler : IRequestHandler<GetTopicsQuery, List<TopicD
 
         foreach (var topic in subject.Topics)
         {
-            var topicTasksCount = topic.Subtopics
-                .Sum(subtopic => subtopic.Exercises?.Count + subtopic.Constellations?.Count ?? 0);
-            
-            if (topicTasksCount == 0)
-                topicTasksCount = 1;
-            
+            var subtopics = await _context.Topics
+                .Include(x => x.Subtopics)
+                .ThenInclude(x => x.Exercises)
+                .Include(x => x.Subtopics)
+                .ThenInclude(x => x.Constellations)
+                .Where(x => x.Id == topic.Id)
+                .Select(x => x.Subtopics)
+                .SingleAsync(cancellationToken);
+
+            var topicTasksCount = subtopics
+                .Sum(subtopic => subtopic.Exercises?.Count + subtopic.Constellations?.Count) ?? 1;
+
             var doneTopicTasksCount = 0;
             var subtopicsDto = new List<SubtopicDto>();
             
-            foreach (var subtopic in topic.Subtopics)
+            foreach (var subtopic in subtopics)
             {
-                var subtopicProgress = progress.Single(p => p.Subtopic == subtopic);
+                var subtopicProgress = progress.Single(p => p.Subtopic.Id == subtopic.Id);
                 doneTopicTasksCount += subtopicProgress.CompletedExercises;
 
-                var count = subtopic.Exercises?.Count ?? subtopic.Constellations?.Count ?? 0;
+                var count = subtopic.Exercises?.Count + subtopic.Constellations?.Count ?? 0;
                 
                 subtopicsDto.Add(new SubtopicDto
                 {

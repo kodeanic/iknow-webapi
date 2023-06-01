@@ -44,19 +44,19 @@ public class CheckAnswerCommandHandler : IRequestHandler<CheckAnswerCommand, boo
         var response = false;
         if (request.Type == TaskType.Exercise)
         {
-            response = await CheckForExercises(request);
+            response = await CheckForExercises(request, user.Id);
         }
         else
         {
             if (request.Answer == "true")
             {
-                response = await UpdateConstellation(request);
+                response = await UpdateConstellation(request, user.Id);
             }
         }
         return response;
     }
     
-    private async Task<bool> CheckForExercises(CheckAnswerCommand request)
+    private async Task<bool> CheckForExercises(CheckAnswerCommand request, int userId)
     {
         var rightAnswer = await _context.Exercises
             .Where(e => e.Id == request.TaskId)
@@ -72,12 +72,16 @@ public class CheckAnswerCommandHandler : IRequestHandler<CheckAnswerCommand, boo
             .SingleAsync();
 
         var progress = await _context.Progresses
-            .Include(p=>p.User)
+            .Include(p => p.User)
             .Include(p => p.Subtopic)
             .Where(p => p.Subtopic.Id == subtopic.Id)
+            .Where(p => p.User.Id == userId)
             .SingleAsync();
-
-        progress.CompletedExercises++;
+        
+        if (progress.CompletedExercises < subtopic.Exercises!.Count)
+        {
+            progress.CompletedExercises++;
+        }
 
         if (progress.CompletedExercises >= subtopic.Exercises!.Count)
         {
@@ -89,20 +93,28 @@ public class CheckAnswerCommandHandler : IRequestHandler<CheckAnswerCommand, boo
 
             var nextIndex = subtopics.FindIndex(s => s.Id == progress.Subtopic.Id) + 1;
 
-            var nextSubtopic = await _context.Progresses
-                .Include(p => p.User)
-                .Include(p => p.Subtopic)
-                .Where(p => p.Subtopic.Id == subtopics[nextIndex].Id)
-                .SingleOrDefaultAsync();
+            try
+            {
+                var nextSubtopic = await _context.Progresses
+                    .Include(p => p.User)
+                    .Include(p => p.Subtopic)
+                    .Where(p => p.Subtopic.Id == subtopics[nextIndex].Id)
+                    .Where(p => p.User.Id == userId)
+                    .SingleOrDefaultAsync();
 
-            if (nextSubtopic != null) nextSubtopic.IsOpen = true;
+                if (nextSubtopic != null) nextSubtopic.IsOpen = true;
+            }
+            catch (Exception ex)
+            {
+                // ignored
+            }
         }
 
         await _context.SaveChangesAsync();
         return true;
     }
     
-    private async Task<bool> UpdateConstellation(CheckAnswerCommand request)
+    private async Task<bool> UpdateConstellation(CheckAnswerCommand request, int userId)
     {
         var subtopic = await _context.Subtopics
             .Include(s => s.Constellations)
@@ -111,13 +123,17 @@ public class CheckAnswerCommandHandler : IRequestHandler<CheckAnswerCommand, boo
             .SingleAsync();
 
         var progress = await _context.Progresses
-            .Include(p=>p.User)
+            .Include(p => p.User)
             .Include(p => p.Subtopic)
             .Where(p => p.Subtopic.Id == subtopic.Id)
+            .Where(p => p.User.Id == userId)
             .SingleAsync();
 
-        progress.CompletedExercises++;
-
+        if (progress.CompletedExercises < subtopic.Constellations!.Count)
+        {
+            progress.CompletedExercises++;
+        }
+        
         if (progress.CompletedExercises >= subtopic.Constellations!.Count)
         {
             var subtopics = await _context.Topics
@@ -128,13 +144,21 @@ public class CheckAnswerCommandHandler : IRequestHandler<CheckAnswerCommand, boo
 
             var nextIndex = subtopics.FindIndex(s => s.Id == progress.Subtopic.Id) + 1;
 
-            var nextSubtopic = await _context.Progresses
-                .Include(p => p.User)
-                .Include(p => p.Subtopic)
-                .Where(p => p.Subtopic.Id == subtopics[nextIndex].Id)
-                .SingleOrDefaultAsync();
+            try
+            {
+                var nextSubtopic = await _context.Progresses
+                    .Include(p => p.User)
+                    .Include(p => p.Subtopic)
+                    .Where(p => p.Subtopic.Id == subtopics[nextIndex].Id)
+                    .Where(p => p.User.Id == userId)
+                    .SingleOrDefaultAsync();
 
-            if (nextSubtopic != null) nextSubtopic.IsOpen = true;
+                if (nextSubtopic != null) nextSubtopic.IsOpen = true;
+            }
+            catch (Exception ex)
+            {
+                // ignored
+            }
         }
 
         await _context.SaveChangesAsync();

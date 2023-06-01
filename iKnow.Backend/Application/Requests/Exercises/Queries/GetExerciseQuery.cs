@@ -36,6 +36,16 @@ public class GetExerciseQueryHandler : IRequestHandler<GetExerciseQuery, TaskDto
         if (user is null)
             throw new NotFoundException("Пользователя не существует");
 
+        var subtopicStatus = await _context.Progresses
+            .Include(p => p.User)
+            .Include(p => p.Subtopic)
+            .Where(p => p.User.Id == user.Id && p.Subtopic.Id == request.SubtopicId)
+            .Select(x => x.IsOpen)
+            .SingleAsync(cancellationToken);
+
+        if (!subtopicStatus)
+            throw new BadRequestException("Тема недоступна");
+            
         var subtopicProgress = await _context.Progresses
             .Include(p => p.User)
             .Include(p => p.Subtopic)
@@ -75,7 +85,7 @@ public class GetExerciseQueryHandler : IRequestHandler<GetExerciseQuery, TaskDto
 
         return new TaskDto
         {
-            Type = TaskType.Exercise.ToString().ToLower(),
+            Type = TaskType.Exercise.ToString(),
             Exercise = new ExerciseDto
             {
                 Id = exercise.Id,
@@ -133,7 +143,7 @@ public class GetExerciseQueryHandler : IRequestHandler<GetExerciseQuery, TaskDto
         
         return new TaskDto
         {
-            Type = TaskType.Constellation.ToString().ToLower(),
+            Type = TaskType.Constellation.ToString(),
             Constellation = response
         };
     }
